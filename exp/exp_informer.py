@@ -1,5 +1,6 @@
 from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
 from data.edf_loader import EdfDataset
+from data.sample_loader import SampleDataset
 from exp.exp_basic import Exp_Basic
 from models.model import Informer, InformerStack
 
@@ -70,7 +71,8 @@ class Exp_Informer(Exp_Basic):
             'ECL':Dataset_Custom,
             'Solar':Dataset_Custom,
             'custom':Dataset_Custom,
-            'SingleEdf': EdfDataset
+            'SingleEdf': EdfDataset,
+            'SampleEdf': SampleDataset
         }
         Data = data_dict[self.args.data]
         timeenc = 0 if args.embed!='timeF' else 1
@@ -94,6 +96,8 @@ class Exp_Informer(Exp_Basic):
             freq=freq,
             cols=args.cols
         )
+        if self.args.data == 'SampleEdf':
+            data_set = data_set.sample_dataset
         print(flag, len(data_set))
         data_loader = DataLoader(
             data_set,
@@ -159,7 +163,7 @@ class Exp_Informer(Exp_Basic):
                 loss = criterion(pred, true)
                 train_loss.append(loss.item())
                 
-                if (i+1) % 100==0:
+                if (i+1) % 500==0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time()-time_now)/iter_count
                     left_time = speed*((self.args.train_epochs - epoch)*train_steps - i)
